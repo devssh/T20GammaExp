@@ -1,29 +1,28 @@
-
-
-
-def test(run_rate):
-    kirat = Player('Kirat Boli', run_rate, 4)
-    x = [kirat.bat() for i in range(1, 1000)]
-    return sum(x) / 1000
-
+from team import Team
+from player import Player
+from umpire import Umpire
+from game import Game
+from observers import Fan
+from observers import Commentator
 
 if __name__ == '__main__':
-    team_bangalore = Team("bangalore", [
-        Player('Kirat Boli', 30, 4), Player('NS Nodhi', 10), Player('R Rumrah', 9),
+    overs_left = 4
+    runs_to_win = 40
+    wickets_left = 3
+
+    team_bangalore = Team("Bengaluru", [
+        Player('Kirat Boli', 24, 0.05), Player('NS Nodhi', 10, 0.8), Player('R Rumrah', 9),
         Player('Shashi Henra', 6)
     ], wickets_left)
 
-    team_chennai = Team("chennai", [], 0)
-    umpire = Umpire()
+    team_chennai = Team("Chennai", [], 0)
+    umpire = Umpire(runs_to_win, wickets_left, overs_left)
     game = Game(team_bangalore, team_chennai, umpire, overs_left)
 
-    observer = Observer()
-    commentator = Commentator()
-    observers = [observer, commentator]
+    fan = Fan(team_bangalore)
+    commentator = Commentator(overs_left, runs_to_win, wickets_left)
+    observers = [fan, commentator]
     game.add_observers(observers)
     winner = game.play()
-
-    print(observer.summarize_match())
+    print(fan.summarize_match())
     print(commentator.commentary())
-    # Player('x', 37)
-    # print([(i, test(i)) for i in range(6, 37)])

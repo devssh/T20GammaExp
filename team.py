@@ -11,3 +11,8 @@ class Team:
         self.wickets_left = self.wickets_left - 1
         return self.players[-self.wickets_left]
 
+    def __str__(self):
+        return self.name + ": " + str(self.players)
+
+    def __repr__(self):
+        return self.__str__()

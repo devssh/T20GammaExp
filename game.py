@@ -1,6 +1,3 @@
-overs_left = 4
-runs_to_win = 40
-wickets_left = 3
 number_of_balls_in_over = 6
 
 
@@ -16,46 +13,52 @@ class Game:
         self.overs_left = overs_left
 
     def add_observers(self, observers):
-        self.observers = self.observers.append(*observers)
+        self.observers = [*self.observers, *observers]
 
-    def is_game_over(self, wickets_left, runs_left):
-        if wickets_left == 0 or runs_left <= 0:
-            return True
-        return False
+    def notify_observers_score(self, over_count, batter, runs):
+        [observer.notify_score(over_count, batter, runs) for observer in self.observers]
 
-    def notify_observers_score(self, batter, runs):
-        [observer.notify_score(batter, runs) for observer in self.observers]
+    def notify_observers_out(self, over_count, batter):
+        [observer.notify_out(over_count, batter) for observer in self.observers]
 
     def notify_observers_winner(self, winner):
         [observer.notify_winner(winner) for observer in self.observers]
 
     def switch_batters(self):
-        self.batters = reversed(self.batters)
+        return list(reversed(self.batters))
 
     def increment_runs(self, runs):
-        self.runs = self.runs + runs
+        return self.runs + runs
 
     def increment_over_count(self):
-        if self.overs % 1 == 0.6:
-            return int(self.overs) + 1
+        if round(self.overs % 1, 1) == 0.6:
+            return round(int(self.overs) + 1.1, 1)
         else:
-            return self.overs + 0.1
+            return round(self.overs + 0.1, 1)
+
+    def is_new_over(self):
+        if self.overs % 1 == 0.6:
+            return True
+        return False
+
+    def get_current_batsman(self):
+        return self.batters[0]
 
     def play(self):
-
-        while ~self.is_game_over(self.wickets_left, self.runs_to_win - self.runs):
-            outcome, runs = self.batters[0].bat()
+        while not self.umpire.is_game_over(self.runs):
+            if self.is_new_over():
+                self.batters = self.switch_batters()
             self.overs = self.increment_over_count()
-            if self.umpire.decides_is_out(outcome):
+            current_batsman = self.get_current_batsman()
+            out_status, runs = current_batsman.bat()
+            if self.umpire.decides_is_out(out_status):
                 self.batters = [self.team1.next_batter(), self.batters[1]]
-                self.wickets_left = self.wickets_left - 1
+                self.notify_observers_out(self.overs, current_batsman)
             else:
-                self.increment_runs(runs)
-                self.notify_observers_score(self.batters[0], runs)
+                self.runs = self.increment_runs(runs)
+                self.notify_observers_score(self.overs, current_batsman, runs)
                 if runs % 2 == 1:
-                    self.switch_batters()
-
-        winner = umpire.decide_winner(self.runs)
+                    self.batters = self.switch_batters()
+        winner = self.umpire.decide_winner(self.team1, self.team2, self.runs)
         self.notify_observers_winner(winner)
         return winner
-
