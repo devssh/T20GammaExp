@@ -11,11 +11,11 @@ if __name__ == '__main__':
     wickets_left = 3
 
     team_bangalore = Team("Bengaluru", [
-        Player('Kirat Boli', 24, 0.05), Player('NS Nodhi', 10, 0.5), Player('R Rumrah', 9),
+        Player('Kirat Boli', 26, 0.05), Player('NS Nodhi', 10, 0.5), Player('R Rumrah', 9, 0.01),
         Player('Shashi Henra', 6)
     ], wickets_left)
 
-    team_chennai = Team("Chennai", [], 0)
+    team_chennai = Team("Chennai", [], 0, has_finished_batting=True)
     umpire = Umpire(runs_to_win, wickets_left, overs_left)
     game = Game(team_bangalore, team_chennai, umpire, overs_left)
 

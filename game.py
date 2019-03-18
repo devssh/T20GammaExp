@@ -44,21 +44,25 @@ class Game:
     def get_current_batsman(self):
         return self.batters[0]
 
+    def play_ball(self):
+        if self.is_new_over():
+            self.batters = self.switch_batters()
+        self.overs = self.increment_over_count()
+        current_batsman = self.get_current_batsman()
+        out_status, runs = current_batsman.bat()
+        if self.umpire.decides_is_out(out_status):
+            self.batters = [self.team1.next_batter(), self.batters[1]]
+            self.notify_observers_out(self.overs, current_batsman)
+        else:
+            self.runs = self.increment_runs(runs)
+            self.notify_observers_score(self.overs, current_batsman, runs)
+            if runs % 2 == 1:
+                self.batters = self.switch_batters()
+        return runs
+
     def play(self):
         while not self.umpire.is_game_over(self.runs):
-            if self.is_new_over():
-                self.batters = self.switch_batters()
-            self.overs = self.increment_over_count()
-            current_batsman = self.get_current_batsman()
-            out_status, runs = current_batsman.bat()
-            if self.umpire.decides_is_out(out_status):
-                self.batters = [self.team1.next_batter(), self.batters[1]]
-                self.notify_observers_out(self.overs, current_batsman)
-            else:
-                self.runs = self.increment_runs(runs)
-                self.notify_observers_score(self.overs, current_batsman, runs)
-                if runs % 2 == 1:
-                    self.batters = self.switch_batters()
+            self.play_ball()
         winner = self.umpire.decide_winner(self.team1, self.team2, self.runs)
         self.notify_observers_winner(winner)
         return winner

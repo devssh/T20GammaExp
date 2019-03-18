@@ -10,3 +10,13 @@ services:
       - "3000:3000"
     volumes:
       - .:/code
+  test:
+    image: python-test-console
+    build:
+      context: .
+      dockerfile: Dockerfile-test
+    network_mode: bridge
+    ports:
+      - "3001:3001"
+    volumes:
+      - .:/code
