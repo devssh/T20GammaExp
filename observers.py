@@ -44,20 +44,36 @@ class Commentator:
     def notify_winner(self, winning_team):
         self.winner = winning_team.name
 
+    def winner_message(self, wickets_remaining, runs_remaining, balls_remaining):
+        if wickets_remaining > 0:
+            return "\n" + self.winner + " won by " + str(wickets_remaining) + " wickets and " + str(
+                balls_remaining
+            ) + " balls remaining"
+        elif self.winner == "Draw":
+            return "\n The match ended in a draw"
+        return "\n" + self.winner + " won by " + str(runs_remaining) + " runs and " + str(
+            balls_remaining
+        ) + " balls remaining"
+
     def commentary(self):
         commentary = ""
+        balls_total = self.overs_left * number_of_balls_in_over
         balls_played = 0
         runs = 0
+        wickets_fallen = 0
         for memory in self.memories:
             if balls_played % number_of_balls_in_over == 0:
-                commentary = commentary + "\n" + str(
+                commentary = commentary + "\n\n" + str(
                     int(self.overs_left - (balls_played / number_of_balls_in_over))) + " overs left. " + str(
                     self.runs_to_win - runs
                 ) + " runs to win"
             balls_played = balls_played + 1
             runs = runs + memory.runs
+            if memory.event_type == out_type:
+                wickets_fallen = wickets_fallen + 1
             commentary = commentary + "\n" + str(memory)
-        commentary = commentary + "\n" + self.winner + " won by x wickets and y balls remaining"
+        commentary = commentary + self.winner_message(self.wickets_left - wickets_fallen, self.runs_to_win - runs,
+                                                      balls_total - balls_played)
         return commentary
 
 
@@ -77,7 +93,7 @@ class StatisticalMemory:
     def __str__(self):
         player_name = self.player.name
         return player_name + " - " + str(self.runs) + (
-            "*" if self.out_status == not_out else ""
+            "*" if self.out_status != out_type else ""
         ) + " (" + str(self.balls_played) + " balls)"
 
     def __repr__(self):
@@ -85,7 +101,10 @@ class StatisticalMemory:
 
 
 class Fan:
-    def __init__(self, team_to_support):
+    def __init__(self, team_to_support, overs_left, runs_to_win, wickets_left):
+        self.wickets_left = wickets_left
+        self.runs_to_win = runs_to_win
+        self.overs_left = overs_left
         self.team_to_support = team_to_support
         self.memory = OrderedDict()
         self.winner = ""
@@ -94,7 +113,7 @@ class Fan:
         player = memory.batter
         player_name = player.name
         if player_name not in self.memory:
-            self.memory[player_name] = StatisticalMemory(0, 1, player, not_out)
+            self.memory[player_name] = StatisticalMemory(0, 0, player, not_out)
         old_memory = self.memory[player_name]
         if memory.event_type == score_type:
             self.memory[player_name] = old_memory.add_memory(memory)
@@ -112,9 +131,28 @@ class Fan:
     def notify_winner(self, winning_team):
         self.winner = winning_team.name
 
-    def recall_summary(self, player_name):
-        runs, balls, player, out_status = self.memory[player_name]
-        return player_name + " - " + str(runs) + ("*" if out_status == not_out else "") + " (" + str(balls) + " balls)"
+    def winner_message(self, wickets_remaining, runs_remaining, balls_remaining):
+        if wickets_remaining > 0:
+            return "\n" + self.winner + " won by " + str(wickets_remaining) + " wickets and " + str(
+                balls_remaining
+            ) + " balls remaining\n\n"
+        elif self.winner == "Draw":
+            return "\n The match ended in a draw\n\n"
+        return "\n" + self.winner + " won by " + str(runs_remaining) + " runs and " + str(
+            balls_remaining
+        ) + " balls remaining\n\n"
 
     def summarize_match(self):
-        return "\n".join([self.recall_summary(player_name) for player_name in self.memory])
+        summary = ""
+        balls_remaining = self.overs_left * number_of_balls_in_over
+        balls_played = 0
+        wickets_taken = 0
+        runs = 0
+        for player_name in self.memory.keys():
+            statistical_memory = self.memory[player_name]
+            balls_played = balls_played + statistical_memory.balls_played
+            wickets_taken = wickets_taken + (1 if statistical_memory.out_status == out_type else 0)
+            runs = runs + statistical_memory.runs
+            summary = summary + str(statistical_memory) + "\n"
+        return self.winner_message(self.wickets_left - wickets_taken, self.runs_to_win - runs,
+                                   balls_remaining - balls_played) + summary

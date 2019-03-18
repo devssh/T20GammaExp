@@ -11,7 +11,7 @@ if __name__ == '__main__':
     wickets_left = 3
 
     team_bangalore = Team("Bengaluru", [
-        Player('Kirat Boli', 24, 0.05), Player('NS Nodhi', 10, 0.8), Player('R Rumrah', 9),
+        Player('Kirat Boli', 24, 0.05), Player('NS Nodhi', 10, 0.5), Player('R Rumrah', 9),
         Player('Shashi Henra', 6)
     ], wickets_left)
 
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     umpire = Umpire(runs_to_win, wickets_left, overs_left)
     game = Game(team_bangalore, team_chennai, umpire, overs_left)
 
-    fan = Fan(team_bangalore)
+    fan = Fan(team_bangalore, overs_left, runs_to_win, wickets_left)
     commentator = Commentator(overs_left, runs_to_win, wickets_left)
     observers = [fan, commentator]
     game.add_observers(observers)
