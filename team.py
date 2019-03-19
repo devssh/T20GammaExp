@@ -9,9 +9,13 @@ class Team(Observer):
         self.name = name
 
     def select_first_batsman(self):
+        if len(self.available_players) < 2:
+            raise ValueError("Cannot select batsmen, team is out")
         return self.available_players[0]
 
     def select_second_batsman(self):
+        if len(self.available_players) < 2:
+            raise ValueError("Cannot select second batsmen, team is out")
         return self.available_players[1]
 
     def notify(self, notification_event):

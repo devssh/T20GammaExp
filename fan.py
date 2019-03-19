@@ -7,9 +7,14 @@ class Fan(Observer):
     def __init__(self, supports_team):
         super().__init__()
         self.supports_team = supports_team
+        self.stats = OrderedDict()
+
+    def notify(self, event):
+        stats = event.batter_statistics
+        self.stats[stats.player.name] = stats
 
     def summarize_match(self):
-        statistics = OrderedDict([(event.batter.name, event.batter_statistics) for event in self.events])
+        stats = self.stats
         summary = str(self.winner) + "\n\n" + "\n".join(
-            [str(statistics[player_name]) for player_name in statistics]) + "\n\n"
+            [str(stats[player_name]) for player_name in stats]) + "\n\n"
         return summary

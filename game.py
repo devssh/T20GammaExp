@@ -8,18 +8,16 @@ class Game(NotificationService):
         super().__init__()
         self.batters = team1
         self.bowlers = team2
-        self.notification_service = NotificationService()
         self.scoreboard = Scoreboard(team1, team2, runs_to_win, wickets_left, overs_left)
         self.balls_played = 0
         self.current_batsman = 0
-        self.scoreboard.add_observers([self.notification_service])
-        self.notification_service.add_observers([self, team1, team2])
+        self.scoreboard.add_observers([self, team1, team2])
 
     def notify_winner(self, win_event):
         self.winner = win_event
 
     def add_observers(self, observers):
-        self.notification_service.add_observers(observers)
+        self.scoreboard.add_observers(observers)
 
     def switch_current_batsman(self):
         self.current_batsman = (self.current_batsman + 1) % 2
@@ -49,6 +47,7 @@ class Game(NotificationService):
         self.scoreboard.notify(GameEvent(self.balls_played, current_batsman, outcome))
         if self.is_new_over():
             self.switch_current_batsman()
+        return outcome
 
     def play(self):
         while not self.winner:
