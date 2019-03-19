@@ -4,6 +4,7 @@ from event import NotificationEvent, WinEvent, GameEvent
 from notification import NotificationService
 from player import Player
 from player_statistics import PlayerStatistic, PlayerStatsService
+from position_tracker import PositionTracker
 from scoreboard import Scoreboard
 from team import Team
 from umpire import out, not_out, is_batter_out
@@ -12,7 +13,7 @@ from fan import Fan
 from game import Game
 
 pass_count = 0
-total_test_count = 27
+total_test_count = 30
 
 
 def test_passed():
@@ -51,21 +52,40 @@ def test_player_raises_exception_on_invalid_input():
     assert_exception(lambda x: Player("x", [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.4, 0.5]))
 
 
-def test_team_assigns_batters_correctly():
+def test_position_tracker_assigns_batters_correctly():
     players = [Player("x", [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.04, 0.1]),
                Player("y", [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.04, 0.1]),
                Player("z", [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.04, 0.1]),
                Player("a", [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.04, 0.1])]
-    some_team = Team("xyz", players)
-    batter = some_team.select_first_batsman()
-    next_batter = some_team.select_second_batsman()
-    assert_true("invalid batters selected", batter == players[0])
-    assert_true("invalid batters selected", next_batter == players[1])
-    assert_exception(lambda x: Team("xyz", []).select_first_batsman())
+    batting_team = Team("xyz", players)
+    bowling_team = Team("abc", [])
+    player1 = players[0]
+    player2 = players[1]
+    player3 = players[2]
+
+    event_out = NotificationEvent(1, player1, 0, True, 3, 10, 3, PlayerStatistic(player1))
+    event_out2 = NotificationEvent(1, player2, 0, True, 3, 10, 3, PlayerStatistic(player1))
+    event_out3 = NotificationEvent(1, player3, 0, True, 3, 10, 3, PlayerStatistic(player1))
+    tracker = PositionTracker(batting_team, bowling_team)
+    batter = tracker.select_first_batsman()
+    next_batter = tracker.select_second_batsman()
+    assert_true("invalid batter selected", batter == player1)
+    assert_true("invalid alternate batter selected", next_batter == player2)
+
+    tracker.notify(event_out)
+    tracker.notify(event_out2)
+    tracker.notify(event_out3)
+
+    assert_exception(lambda x: tracker.select_first_batsman())
+    assert_exception(lambda x: tracker.select_second_batsman())
+    assert_exception(lambda x: tracker.select_current_batsman())
+
+    tracker = PositionTracker(batting_team, bowling_team)
     is_out = True
-    some_team.notify(NotificationEvent(1, players[1], 0, is_out, 20, 20, 3, PlayerStatistic(players[1])))
-    assert_true("incorrect first batter on out", some_team.select_first_batsman() == players[0])
-    assert_true("incorrect second batter on out", some_team.select_second_batsman() == players[2])
+    tracker.notify(NotificationEvent(1, player2, 0, is_out, 20, 20, 3, PlayerStatistic(player2)))
+    assert_true("incorrect first batter on out", tracker.select_first_batsman() == player1)
+    assert_true("incorrect second batter on out", tracker.select_second_batsman() == player3)
+    assert_true("incorrect current batter on out", tracker.select_current_batsman() == player3)
 
 
 def test_umpire_decides_correctly():
@@ -117,15 +137,16 @@ def test_game_plays_correctly_integration_test():
     observers = [fan, commentator]
     game.add_observers(observers)
     runs = int(game.play_ball())
-    assert_true("assert over increment incorrect", game.balls_played == 1)
-    assert_true("selects incorrect batter", runs % 2 == game.current_batsman)
+    assert_true("assert over increment incorrect", game.position_tracker.balls_played == 1)
+    assert_true("selects incorrect batter", runs % 2 == game.position_tracker.current_batsman)
     game.play_ball()
     game.play_ball()
     game.play_ball()
     game.play_ball()
     game.play_ball()
-    before_over_change_batters = [team_bangalore.select_first_batsman(), team_bangalore.select_second_batsman()]
-    if game.current_batsman == 1:
+    before_over_change_batters = [game.position_tracker.select_first_batsman(),
+                                  game.position_tracker.select_second_batsman()]
+    if game.position_tracker.current_batsman == 1:
         before_over_change_batters = list(reversed(before_over_change_batters))
     runs = int(game.play_ball())
     after_over_change_batter = game.select_current_batsman()
@@ -136,16 +157,18 @@ def test_game_plays_correctly_integration_test():
 
 def test_notification_service_notifies_all_observers():
     notification_service = NotificationService()
-    game = Game(Team("xyz", []), Team("abc", []), 20, 3, 4)
+    player = Player("x", [1, 0, 0, 0, 0, 0, 0, 0])
+    player2 = Player("y", [0.5, 0.5, 0, 0, 0, 0, 0, 0])
+    game = Game(Team("xyz", [player, player2]), Team("abc", []), 20, 3, 4)
+    game.play_ball()
     fan = Fan("xyz")
     commentator = Commentator()
     observers = [fan, commentator, game]
     notification_service.add_observers(observers)
 
-    player = Player("x", [0, 0, 0, 0, 0, 0, 0, 1])
     event = NotificationEvent(1, player, 1, False, 10, 17, 3, PlayerStatistic(player))
     notification_service.notify(event)
-    assert_true("game not notified", game.current_batsman == 1)
+    assert_true("position tracker not notified", game.position_tracker.current_batsman == 1)
     assert_true("fan not notified", len(fan.stats) > 0)
     assert_true("commentator not notified", len(commentator.events) > 0)
 
@@ -194,7 +217,7 @@ def test_scoreboard_works_correctly():
 
 
 test_player_raises_exception_on_invalid_input()
-test_team_assigns_batters_correctly()
+test_position_tracker_assigns_batters_correctly()
 test_umpire_decides_correctly()
 test_observers_store_events()
 test_game_plays_correctly_integration_test()

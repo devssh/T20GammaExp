@@ -51,11 +51,11 @@ class WinEvent:
 
     def __str__(self):
         if self.wickets_remaining > 0 and self.balls_remaining >= 0 and self.runs_remaining < 0:
-            return self.winning_team.name + " won by " + str(self.wickets_remaining) + " wickets and " + str(
+            return "\n" + self.winning_team.name + " won by " + str(self.wickets_remaining) + " wickets and " + str(
                 self.balls_remaining
             ) + " balls remaining"
         elif self.winning_team.name == draw_message:
-            return "The match ended in a draw"
-        return self.winning_team.name + " won by " + str(self.runs_remaining) + " runs and " + str(
+            return "\nThe match ended in a draw"
+        return "\n" + self.winning_team.name + " won by " + str(self.runs_remaining) + " runs and " + str(
             self.balls_remaining
         ) + " balls remaining"
