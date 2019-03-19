@@ -1,68 +1,55 @@
-number_of_balls_in_over = 6
+from event import GameEvent
+from notification import NotificationService
+from scoreboard import Scoreboard
 
 
-class Game:
-    def __init__(self, team1, team2, umpire, overs_left):
-        self.team1 = team1
-        self.team2 = team2
-        self.umpire = umpire
-        self.batters = team1.select_batters()
-        self.observers = []
-        self.runs = 0
-        self.overs = 0
-        self.overs_left = overs_left
+class Game(NotificationService):
+    def __init__(self, team1, team2, runs_to_win, wickets_left, overs_left):
+        super().__init__()
+        self.batters = team1
+        self.bowlers = team2
+        self.notification_service = NotificationService()
+        self.scoreboard = Scoreboard(team1, team2, runs_to_win, wickets_left, overs_left)
+        self.balls_played = 0
+        self.current_batsman = 0
+        self.scoreboard.add_observers([self.notification_service])
+        self.notification_service.add_observers([self, team1, team2])
+
+    def notify_winner(self, win_event):
+        self.winner = win_event
 
     def add_observers(self, observers):
-        self.observers = [*self.observers, *observers]
+        self.notification_service.add_observers(observers)
 
-    def notify_observers_score(self, over_count, batter, runs):
-        [observer.notify_score(over_count, batter, runs) for observer in self.observers]
+    def switch_current_batsman(self):
+        self.current_batsman = (self.current_batsman + 1) % 2
 
-    def notify_observers_out(self, over_count, batter):
-        [observer.notify_out(over_count, batter) for observer in self.observers]
+    def select_current_batsman(self):
+        if self.current_batsman == 0:
+            return self.batters.select_first_batsman()
+        return self.batters.select_second_batsman()
 
-    def notify_observers_winner(self, winner):
-        [observer.notify_winner(winner) for observer in self.observers]
-
-    def switch_batters(self):
-        return list(reversed(self.batters))
-
-    def increment_runs(self, runs):
-        return self.runs + runs
-
-    def increment_over_count(self):
-        if round(self.overs % 1, 1) == 0.6:
-            return round(int(self.overs) + 1.1, 1)
-        else:
-            return round(self.overs + 0.1, 1)
+    def increase_balls_played(self):
+        self.balls_played = self.balls_played + 1
 
     def is_new_over(self):
-        if self.overs % 1 == 0.6:
+        if self.balls_played % 6 == 0:
             return True
         return False
 
-    def get_current_batsman(self):
-        return self.batters[0]
+    def notify(self, event):
+        if not event.is_out:
+            if event.runs % 2 == 1:
+                self.switch_current_batsman()
 
     def play_ball(self):
+        self.increase_balls_played()
+        current_batsman = self.select_current_batsman()
+        outcome = current_batsman.bat()
+        self.scoreboard.notify(GameEvent(self.balls_played, current_batsman, outcome))
         if self.is_new_over():
-            self.batters = self.switch_batters()
-        self.overs = self.increment_over_count()
-        current_batsman = self.get_current_batsman()
-        out_status, runs = current_batsman.bat()
-        if self.umpire.decides_is_out(out_status):
-            self.batters = [self.team1.next_batter(), self.batters[1]]
-            self.notify_observers_out(self.overs, current_batsman)
-        else:
-            self.runs = self.increment_runs(runs)
-            self.notify_observers_score(self.overs, current_batsman, runs)
-            if runs % 2 == 1:
-                self.batters = self.switch_batters()
-        return runs
+            self.switch_current_batsman()
 
     def play(self):
-        while not self.umpire.is_game_over(self.runs):
+        while not self.winner:
             self.play_ball()
-        winner = self.umpire.decide_winner(self.team1, self.team2, self.runs)
-        self.notify_observers_winner(winner)
-        return winner

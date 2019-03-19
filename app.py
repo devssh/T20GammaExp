@@ -1,26 +1,26 @@
-from team import Team
-from player import Player
-from umpire import Umpire
+from commentator import Commentator
+from fan import Fan
 from game import Game
-from observers import Fan
-from observers import Commentator
+from player import Player
+from team import Team
 
 if __name__ == '__main__':
     overs_left = 4
     runs_to_win = 40
     wickets_left = 3
 
-    team_bangalore = Team("Bengaluru", [
-        Player('Kirat Boli', 26, 0.01), Player('NS Nodhi', 10, 0.5), Player('R Rumrah', 6, 0.01),
-        Player('Shashi Henra', 6)
-    ], wickets_left)
+    team_bangalore = Team("Lengaburu", [
+        Player('Kirat Boli', [0.05, 0.3, 0.25, 0.1, 0.15, 0.01, 0.09, 0.05]),
+        Player('N.S Nodhi', [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.04, 0.1]),
+        Player('R Rumrah', [0.2, 0.3, 0.15, 0.05, 0.05, 0.01, 0.04, 0.2]),
+        Player('Shashi Henra', [0.3, 0.25, 0.05, 0, 0.05, 0.01, 0.04, 0.3])
+    ])
 
-    team_chennai = Team("Chennai", [], 0, has_finished_batting=True)
-    umpire = Umpire(runs_to_win, wickets_left, overs_left)
-    game = Game(team_bangalore, team_chennai, umpire, overs_left)
+    team_chennai = Team("Enchai", [])
+    game = Game(team_bangalore, team_chennai, runs_to_win, wickets_left, overs_left)
 
-    fan = Fan(team_bangalore, overs_left, runs_to_win, wickets_left)
-    commentator = Commentator(overs_left, runs_to_win, wickets_left)
+    fan = Fan(team_bangalore)
+    commentator = Commentator()
     observers = [fan, commentator]
     game.add_observers(observers)
     winner = game.play()
