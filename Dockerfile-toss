@@ -1,0 +1,9 @@
+from python:3
+
+WORKDIR /code
+EXPOSE 3002
+
+COPY . .
+RUN pip install -r requirements.txt
+
+CMD ["python", "-u","src/toss.py", "runserver", "0.0.0.0:3002", "$WEATHER", "$TIME"]

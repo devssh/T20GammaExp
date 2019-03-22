@@ -1,15 +1,20 @@
 from event import GameEvent
 from notification import NotificationService
-from position_tracker import PositionTracker
 from scoreboard import Scoreboard
 
+from position_tracker import PositionTracker
 
-class Game(NotificationService):
-    def __init__(self, team1, team2, runs_to_win, wickets_left, overs_left):
+
+class Inning(NotificationService):
+    def __init__(self, batters, bowlers, wickets_left, overs_left, number=1):
         super().__init__()
-        self.scoreboard = Scoreboard(team1, team2, runs_to_win, wickets_left, overs_left)
-        self.position_tracker = PositionTracker(team1, team2)
+        self.scoreboard = Scoreboard(batters, bowlers, wickets_left, overs_left, number)
+        self.position_tracker = PositionTracker(batters, bowlers)
         self.scoreboard.add_observers([self])
+
+    def update_runs_to_win(self, runs_to_win):
+        self.scoreboard = self.scoreboard.update_runs_to_win(runs_to_win)
+        return self
 
     def notify(self, event):
         self.position_tracker = self.position_tracker.notify(event)
@@ -19,6 +24,7 @@ class Game(NotificationService):
 
     def add_observers(self, observers):
         self.scoreboard.add_observers(observers)
+        return self
 
     def select_current_batsman(self):
         return self.position_tracker.select_current_batsman()
@@ -33,3 +39,4 @@ class Game(NotificationService):
     def play(self):
         while not self.winner:
             self.play_ball()
+        return self.scoreboard.summary()

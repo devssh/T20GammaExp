@@ -1,4 +1,5 @@
-import numpy as np
+from randomizer import select_outcome
+
 from umpire import out
 
 
@@ -11,7 +12,7 @@ class Player:
 
     def bat(self):
         outcomes = [0, 1, 2, 3, 4, 5, 6, out]
-        return np.random.choice(outcomes, p=self.pdf)
+        return select_outcome(outcomes, self.pdf)
 
     def __str__(self):
         return "Player(" + self.name + ", [" + ",".join([str(outcome) for outcome in self.pdf]) + "])"

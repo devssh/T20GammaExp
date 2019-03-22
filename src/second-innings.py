@@ -1,7 +1,8 @@
 from commentator import Commentator
 from fan import Fan
-from game import Game
+from innings import Inning
 from player import Player
+
 from team import Team
 
 if __name__ == '__main__':
@@ -17,12 +18,12 @@ if __name__ == '__main__':
     ])
 
     team_chennai = Team("Enchai", [])
-    game = Game(team_bangalore, team_chennai, runs_to_win, wickets_left, overs_left)
+    inning2 = Inning(team_bangalore, team_chennai, wickets_left, overs_left, number=2).update_runs_to_win(runs_to_win)
 
     fan = Fan(team_bangalore)
     commentator = Commentator()
     observers = [fan, commentator]
-    game.add_observers(observers)
-    winner = game.play()
+    inning2.add_observers(observers)
+    winner = inning2.play()
     print(fan.summarize_match())
     print(commentator.commentary())

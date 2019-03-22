@@ -20,3 +20,11 @@ services:
       - "3001:3001"
     volumes:
       - .:/code
+  toss:
+    image: python-toss
+    build:
+      context: .
+    ports:
+      - "3002:3002"
+    volumes:
+      - .:/code

@@ -1,16 +1,17 @@
 import traceback
 
+from commentator import Commentator
 from event import NotificationEvent, WinEvent, GameEvent
+from fan import Fan
+from game import Game
 from notification import NotificationService
 from player import Player
-from player_statistics import PlayerStatistic, PlayerStatsService
 from position_tracker import PositionTracker
 from scoreboard import Scoreboard
 from team import Team
 from umpire import out, not_out, is_batter_out
-from commentator import Commentator
-from fan import Fan
-from game import Game
+
+from player_statistics import PlayerStatistic, PlayerStatsService
 
 pass_count = 0
 total_test_count = 30

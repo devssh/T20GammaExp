@@ -1,5 +1,6 @@
-from constants import number_of_balls_in_over, number_of_batters
 from observer import Observer
+
+from constants import number_of_balls_in_over, number_of_batters
 
 
 class PositionTracker(Observer):

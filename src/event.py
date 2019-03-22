@@ -21,7 +21,8 @@ class NotificationEvent:
         runs = self.runs
         batter_name = self.batter.name
         if self.is_out:
-            return self.display_over_count() + " " + batter_name + " is out"
+            out_message = self.display_over_count() + " " + batter_name + " gets out!"
+            return out_message
         return self.display_over_count() + " " + batter_name + " scores " + str(runs) + (
             " run" if runs == 1 else " runs")
 
