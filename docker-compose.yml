@@ -2,7 +2,7 @@ version: '3.2'
 
 services:
   web:
-    image: python-console
+    image: python-second-innings
     build:
       context: .
     network_mode: bridge
@@ -26,5 +26,14 @@ services:
       context: .
     ports:
       - "3002:3002"
+    volumes:
+      - .:/code
+  playgame:
+    image: python-tie-breaker
+    build:
+      context: .
+      dockerfile: Dockerfile-game
+    ports:
+      - "3003:3003"
     volumes:
       - .:/code

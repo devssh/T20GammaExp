@@ -1,9 +1,12 @@
 import traceback
+import sys
+
+sys.path.append('src/')
 
 from commentator import Commentator
 from event import NotificationEvent, WinEvent, GameEvent
 from fan import Fan
-from game import Game
+from innings import Inning
 from notification import NotificationService
 from player import Player
 from position_tracker import PositionTracker
@@ -131,7 +134,8 @@ def test_game_plays_correctly_integration_test():
     ])
 
     team_chennai = Team("Enchai", [])
-    game = Game(team_bangalore, team_chennai, runs_to_win, wickets_left, overs_left)
+    game = Inning(team_bangalore, team_chennai, wickets_left, overs_left, number=2)
+    game.update_runs_to_win(runs_to_win)
 
     fan = Fan(team_bangalore)
     commentator = Commentator()
@@ -160,7 +164,8 @@ def test_notification_service_notifies_all_observers():
     notification_service = NotificationService()
     player = Player("x", [1, 0, 0, 0, 0, 0, 0, 0])
     player2 = Player("y", [0.5, 0.5, 0, 0, 0, 0, 0, 0])
-    game = Game(Team("xyz", [player, player2]), Team("abc", []), 20, 3, 4)
+    game = Inning(Team("xyz", [player, player2]), Team("abc", []),  3, 4, number=2)
+    game.update_runs_to_win(20)
     game.play_ball()
     fan = Fan("xyz")
     commentator = Commentator()
@@ -203,7 +208,8 @@ def test_scoreboard_works_correctly():
 
     team_chennai = Team("Enchai", [])
 
-    scoreboard = Scoreboard(team_bangalore, team_chennai, runs_to_win, wickets_left, overs_left)
+    scoreboard = Scoreboard(team_bangalore, team_chennai, wickets_left, overs_left, 2)
+    scoreboard.update_runs_to_win(runs_to_win)
     fan = Fan("x")
     commentator = Commentator()
     scoreboard.add_observers([fan, commentator])

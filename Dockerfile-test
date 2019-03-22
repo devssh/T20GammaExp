@@ -6,4 +6,4 @@ EXPOSE 3001
 COPY . .
 RUN pip install -r requirements.txt
 
-CMD ["python", "-u","tests.py", "runserver", "0.0.0.0:3001"]
+CMD ["python", "-u","tests/tests.py", "runserver", "0.0.0.0:3001"]
