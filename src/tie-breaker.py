@@ -1,4 +1,4 @@
-from commentator import Commentator2
+from commentator import ExcitedCommentator
 from fan import Fan
 from game import Cricket
 from player import Player
@@ -22,9 +22,9 @@ if __name__ == '__main__':
     game = Cricket(team_bangalore, team_chennai, overs_left)
 
     fan = Fan(team_bangalore)
-    commentator = Commentator2()
+    commentator = ExcitedCommentator()
     observers = [fan, commentator]
     game.add_observers(observers)
-    winner = game.play()
+    game.play()
     print(fan.summarize_match())
     print(commentator.commentary())

@@ -1,4 +1,5 @@
-from constants import number_of_balls_in_over, draw_message
+from commentator import display_over_count
+from constants import draw_message
 
 
 class NotificationEvent:
@@ -14,18 +15,15 @@ class NotificationEvent:
         self.batter = batter
         self.balls_played = balls_played
 
-    def display_over_count(self):
-        over_number = int((self.balls_played - 1) / number_of_balls_in_over)
-        over_fraction = round((((self.balls_played - 1) % number_of_balls_in_over) / 10) + 0.1, 1)
-        return str(round(over_number + over_fraction, 1))
-
     def __str__(self):
         runs = self.runs
         batter_name = self.batter.name
-        if self.is_out:
-            out_message = self.display_over_count() + " " + batter_name + " gets out!"
+        is_out = self.is_out
+        balls_played = self.balls_played
+        if is_out:
+            out_message = display_over_count(balls_played) + " " + batter_name + " gets out!"
             return out_message
-        return self.display_over_count() + " " + batter_name + " scores " + str(runs) + (
+        return display_over_count(balls_played) + " " + batter_name + " scores " + str(runs) + (
             " run" if runs == 1 else " runs")
 
     def show(self):
@@ -53,14 +51,20 @@ class WinEvent:
         self.wickets_remaining = wickets_remaining
 
     def __str__(self):
-        if self.winning_team.name == draw_message:
+        winner_name = self.winning_team.name
+        wickets_remaining = self.wickets_remaining
+        balls_remaining = self.balls_remaining
+        runs_remaining = self.runs_remaining
+
+        balls_string = " balls" if balls_remaining > 1 or balls_remaining == 0 else " ball"
+        if winner_name == draw_message:
             return "\nThe match ended in a draw"
-        elif self.wickets_remaining > 0 and self.balls_remaining >= 0 and self.runs_remaining <= 0:
-            return "\n" + self.winning_team.name + " won by " + str(self.wickets_remaining) + (
-                " wickets" if self.wickets_remaining > 1 else " wicket") + " and " + str(
-                self.balls_remaining
-            ) + (" balls" if self.balls_remaining > 1 else " ball") + " remaining"
-        return "\n" + self.winning_team.name + " won by " + str(self.runs_remaining) + (
-            " runs" if self.runs_remaining > 1 else " run") + " and " + str(
-            self.balls_remaining
-        ) + (" balls" if self.balls_remaining > 1 else " ball") + " remaining"
+        elif wickets_remaining > 0 and balls_remaining >= 0 and runs_remaining <= 0:
+            return "\n" + winner_name + " won by " + str(wickets_remaining) + (
+                " wickets" if wickets_remaining > 1 else " wicket") + " and " + str(
+                balls_remaining
+            ) + balls_string + " remaining"
+        return "\n" + winner_name + " won by " + str(runs_remaining) + (
+            " runs" if runs_remaining > 1 else " run") + " and " + str(
+            balls_remaining
+        ) + balls_string + " remaining"

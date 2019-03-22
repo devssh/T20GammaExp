@@ -1,9 +1,9 @@
-import traceback
 import sys
+import traceback
 
 sys.path.append('src/')
 
-from commentator import Commentator
+from commentator import Commentator, ExcitedCommentator
 from event import NotificationEvent, WinEvent, GameEvent
 from fan import Fan
 from innings import Inning
@@ -12,12 +12,12 @@ from player import Player
 from position_tracker import PositionTracker
 from scoreboard import Scoreboard
 from team import Team
-from umpire import out, not_out, is_batter_out
-
+from umpire import out, not_out, is_batter_out, toss_coin_to_decide_who_bats_first
 from player_statistics import PlayerStatistic, PlayerStatsService
+from game import Cricket
 
 pass_count = 0
-total_test_count = 30
+total_test_count = 533
 
 
 def test_passed():
@@ -52,8 +52,36 @@ def assert_exception(some_func):
         test_passed()
 
 
+def test_toss_works_correctly():
+    weather = "clear"
+    time = "day"
+
+    team1 = Team("Lengaburu", [], weather_preferences=True, time_preferences=True)
+    team2 = Team("Enchai", [], weather_preferences=False, time_preferences=False)
+    toss_outcome, is_batting, batter, bowler = toss_coin_to_decide_who_bats_first(team1, team2, weather, time)
+    if toss_outcome:
+        assert_true("Lengaburu not deciding to bat correctly on winning toss", is_batting)
+    else:
+        assert_true("Enchai not deciding to bowl correctly on winning toss", not is_batting)
+
+
 def test_player_raises_exception_on_invalid_input():
     assert_exception(lambda x: Player("x", [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.4, 0.5]))
+
+
+def test_player_probability_works():
+    try:
+        player1 = Player("x", [1, 0, 0, 0, 0, 0, 0, 0])
+        assert_true("player_probability should be 0", int(player1.bat()) == 0)
+        player2 = Player("x", [0, 1, 0, 0, 0, 0, 0, 0])
+        assert_true("player_probability should be 1", int(player2.bat()) == 1)
+        player3 = Player("x", [0, 0, 0, 0, 0.5, 0, 0.5, 0])
+        outcome = int(player3.bat())
+        assert_true("player_probability should be 4 or 6", (outcome == 6 or outcome == 4))
+        player4 = Player("x", [0, 0, 0, 0, 0, 0, 0, 1])
+        assert_true("player_probability should be out", str(player4.bat()) == out)
+    except Exception:
+        print("Error when testing player probability")
 
 
 def test_position_tracker_assigns_batters_correctly():
@@ -67,9 +95,9 @@ def test_position_tracker_assigns_batters_correctly():
     player2 = players[1]
     player3 = players[2]
 
-    event_out = NotificationEvent(1, player1, 0, True, 3, 10, 3, PlayerStatistic(player1))
-    event_out2 = NotificationEvent(1, player2, 0, True, 3, 10, 3, PlayerStatistic(player1))
-    event_out3 = NotificationEvent(1, player3, 0, True, 3, 10, 3, PlayerStatistic(player1))
+    event_out = NotificationEvent(1, player1, 0, True, 3, 10, 3, PlayerStatistic(player1), batting_team)
+    event_out2 = NotificationEvent(1, player2, 0, True, 3, 10, 3, PlayerStatistic(player1), batting_team)
+    event_out3 = NotificationEvent(1, player3, 0, True, 3, 10, 3, PlayerStatistic(player1), batting_team)
     tracker = PositionTracker(batting_team, bowling_team)
     batter = tracker.select_first_batsman()
     next_batter = tracker.select_second_batsman()
@@ -86,7 +114,7 @@ def test_position_tracker_assigns_batters_correctly():
 
     tracker = PositionTracker(batting_team, bowling_team)
     is_out = True
-    tracker.notify(NotificationEvent(1, player2, 0, is_out, 20, 20, 3, PlayerStatistic(player2)))
+    tracker.notify(NotificationEvent(1, player2, 0, is_out, 20, 20, 3, PlayerStatistic(player2), batting_team))
     assert_true("incorrect first batter on out", tracker.select_first_batsman() == player1)
     assert_true("incorrect second batter on out", tracker.select_second_batsman() == player3)
     assert_true("incorrect current batter on out", tracker.select_current_batsman() == player3)
@@ -101,12 +129,13 @@ def test_observers_store_events():
     player = Player("x", [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.04, 0.1])
     player2 = Player("y", [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.04, 0.1])
     player3 = Player("z", [0.1, 0.4, 0.2, 0.05, 0.1, 0.01, 0.04, 0.1])
+    batting_team = Team("xyz", [player, player2, player3])
     commentator = Commentator()
     is_not_out = False
-    event = NotificationEvent(1, player, 3, is_not_out, 10, 17, 3, PlayerStatistic(player))
-    event2 = NotificationEvent(2, player2, 0, True, 9, 17, 2, PlayerStatistic(player2))
-    event3 = NotificationEvent(3, player3, 1, is_not_out, 8, 16, 2, PlayerStatistic(player3))
-    event4 = NotificationEvent(4, player, 2, is_not_out, 7, 14, 2, PlayerStatistic(player))
+    event = NotificationEvent(1, player, 3, is_not_out, 10, 17, 3, PlayerStatistic(player), batting_team)
+    event2 = NotificationEvent(2, player2, 0, True, 9, 17, 2, PlayerStatistic(player2), batting_team)
+    event3 = NotificationEvent(3, player3, 1, is_not_out, 8, 16, 2, PlayerStatistic(player3), batting_team)
+    event4 = NotificationEvent(4, player, 2, is_not_out, 7, 14, 2, PlayerStatistic(player), batting_team)
     commentator.notify(event)
     commentator.notify(event2)
     commentator.notify(event3)
@@ -121,7 +150,7 @@ def test_observers_store_events():
     assert_true("fan not storing stats correctly", len(fan.stats) == 3)
 
 
-def test_game_plays_correctly_integration_test():
+def test_innings_plays_correctly_integration_test():
     overs_left = 4
     runs_to_win = 40
     wickets_left = 3
@@ -160,11 +189,38 @@ def test_game_plays_correctly_integration_test():
     assert_true("assert notifies observers", len(commentator.events) > 0 and len(fan.stats) > 0)
 
 
+def test_game_plays_correctly_integration_test():
+    overs_left = 2
+
+    team_bangalore = Team("Lengaburu", [
+        Player('Kirat Boli', [0.05, 0.1, 0.25, 0.1, 0.25, 0.01, 0.14, 0.10]),
+        Player('N.S Nodhi', [0.05, 0.15, 0.15, 0.1, 0.2, 0.01, 0.19, 0.15]),
+    ])
+
+    team_chennai = Team("Enchai", [
+        Player('DB Vellyers', [0.05, 0.1, 0.25, 0.1, 0.25, 0.01, 0.14, 0.10]),
+        Player('H Mamla', [0.05, 0.15, 0.15, 0.1, 0.2, 0.01, 0.19, 0.15]),
+    ])
+    # h mamla has pdf > 1 in the geektrust website problem statement!
+
+    game = Cricket(team_bangalore, team_chennai, overs_left)
+
+    fan = Fan(team_bangalore)
+    commentator = ExcitedCommentator()
+    observers = [fan, commentator]
+    game.add_observers(observers)
+    winner = game.play()
+    assert_true("Game has no winner on end", fan.winner)
+    assert_true("Fan is not getting notified", len(fan.stats) > 0)
+    assert_true("Commentator is not getting notified", len(commentator.events) > 0)
+
+
 def test_notification_service_notifies_all_observers():
     notification_service = NotificationService()
     player = Player("x", [1, 0, 0, 0, 0, 0, 0, 0])
     player2 = Player("y", [0.5, 0.5, 0, 0, 0, 0, 0, 0])
-    game = Inning(Team("xyz", [player, player2]), Team("abc", []),  3, 4, number=2)
+    batting_team = Team("xy", [player, player2])
+    game = Inning(Team("xyz", [player, player2]), Team("abc", []), 3, 4, number=2)
     game.update_runs_to_win(20)
     game.play_ball()
     fan = Fan("xyz")
@@ -172,7 +228,7 @@ def test_notification_service_notifies_all_observers():
     observers = [fan, commentator, game]
     notification_service.add_observers(observers)
 
-    event = NotificationEvent(1, player, 1, False, 10, 17, 3, PlayerStatistic(player))
+    event = NotificationEvent(1, player, 1, False, 10, 17, 3, PlayerStatistic(player), batting_team)
     notification_service.notify(event)
     assert_true("position tracker not notified", game.position_tracker.current_batsman == 1)
     assert_true("fan not notified", len(fan.stats) > 0)
@@ -223,13 +279,17 @@ def test_scoreboard_works_correctly():
     assert_true("scoreboard not announcing winner on game end", fan.winner)
 
 
+acceptable_trials = 100
+[test_toss_works_correctly() for _ in range(acceptable_trials)]
 test_player_raises_exception_on_invalid_input()
 test_position_tracker_assigns_batters_correctly()
 test_umpire_decides_correctly()
 test_observers_store_events()
+test_innings_plays_correctly_integration_test()
 test_game_plays_correctly_integration_test()
 test_notification_service_notifies_all_observers()
 test_player_statistics_updates_correctly()
 test_scoreboard_works_correctly()
+[test_player_probability_works() for _ in range(acceptable_trials)]
 
 print(str(pass_count) + " / " + str(total_test_count) + " tests passed ")

@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from observer import Observer
+from player_statistics import PlayerStatistic
 
 
 class Fan(Observer):
@@ -10,6 +11,9 @@ class Fan(Observer):
         self.stats = OrderedDict()
 
     def notify(self, event):
+        for player in event.batting_team.players:
+            if player.name not in self.stats:
+                self.stats[player.name] = PlayerStatistic(player)
         stats = event.batter_statistics
         self.stats[stats.player.name] = stats
 

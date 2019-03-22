@@ -30,7 +30,6 @@ class Inning(NotificationService):
         return self.position_tracker.select_current_batsman()
 
     def play_ball(self):
-        print("playing ball")
         current_batsman = self.select_current_batsman()
         outcome = current_batsman.bat()
         tracker = self.position_tracker

@@ -25,10 +25,8 @@ class Cricket(NotificationService):
         # else:
         #     self.inning1 = Inning(self.team2, self.team1, len(self.team1.players), self.total_overs, number=1)
         #     self.inning2 = Inning(self.team1, self.team2, len(self.team1.players), self.total_overs, number=2)
-        self.inning1 = self.inning1.add_observers([*self.observers, self])
-        print("Starting")
+        self.inning1 = self.inning1.add_observers([self])
         self.inning1_summary = self.inning1.play()
-        print("inningover")
-        self.inning2 = self.inning2.update_runs_to_win(self.inning1_summary[1]).add_observers([*self.observers, self])
+        runs_to_win = self.inning1_summary[1]
+        self.inning2 = self.inning2.update_runs_to_win(runs_to_win).add_observers([self])
         self.inning2_summary = self.inning2.play()
-        return self.winner
