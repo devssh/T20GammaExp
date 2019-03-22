@@ -13,3 +13,18 @@ class Commentator(Observer):
                     event.runs_to_win + event.runs) + " runs to win\n\n"
             commentary = commentary + str(event) + "\n"
         return commentary + str(self.winner)
+
+
+class Commentator2(Observer):
+    def commentary(self):
+        events = self.events
+        teams = list(set([event.batting_team.name for event in events]))
+        if events[0].batting_team.name != teams[0]:
+            teams = list(reversed(teams))
+        commentary = ""
+        for team in teams:
+            team_events = [event for event in self.events if event.batting_team.name == team]
+            commentary = commentary + team + " innings:\n"
+            for event in team_events:
+                commentary = commentary + str(event) + "\n"
+        return commentary + str(self.winner)

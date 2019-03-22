@@ -17,15 +17,18 @@ class Cricket(NotificationService):
         self.inning2_summary = False
 
     def play(self):
-        self.coin_toss_outcome = flip_coin()
-        if self.coin_toss_outcome == HEADS:
-            self.inning1 = Inning(self.team1, self.team2, len(self.team1.players), self.total_overs, number=1)
-            self.inning2 = Inning(self.team2, self.team1, len(self.team1.players), self.total_overs, number=2)
-        else:
-            self.inning1 = Inning(self.team2, self.team1, len(self.team1.players), self.total_overs, number=1)
-            self.inning2 = Inning(self.team1, self.team2, len(self.team1.players), self.total_overs, number=2)
+        # self.coin_toss_outcome = flip_coin()
+        # if self.coin_toss_outcome == HEADS:
+        # geektrust says assume lengaburu always bats first
+        self.inning1 = Inning(self.team1, self.team2, len(self.team1.players) - 1, self.total_overs, number=1)
+        self.inning2 = Inning(self.team2, self.team1, len(self.team1.players) - 1, self.total_overs, number=2)
+        # else:
+        #     self.inning1 = Inning(self.team2, self.team1, len(self.team1.players), self.total_overs, number=1)
+        #     self.inning2 = Inning(self.team1, self.team2, len(self.team1.players), self.total_overs, number=2)
         self.inning1 = self.inning1.add_observers([*self.observers, self])
+        print("Starting")
         self.inning1_summary = self.inning1.play()
+        print("inningover")
         self.inning2 = self.inning2.update_runs_to_win(self.inning1_summary[1]).add_observers([*self.observers, self])
         self.inning2_summary = self.inning2.play()
         return self.winner

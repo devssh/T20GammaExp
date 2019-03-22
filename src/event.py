@@ -2,7 +2,9 @@ from constants import number_of_balls_in_over, draw_message
 
 
 class NotificationEvent:
-    def __init__(self, balls_played, batter, runs, is_out, balls_left, runs_to_win, wickets_left, batter_statistics):
+    def __init__(self, balls_played, batter, runs, is_out, balls_left, runs_to_win, wickets_left, batter_statistics,
+                 batting_team):
+        self.batting_team = batting_team
         self.balls_left = balls_left
         self.batter_statistics = batter_statistics
         self.wickets_left = wickets_left
@@ -51,12 +53,14 @@ class WinEvent:
         self.wickets_remaining = wickets_remaining
 
     def __str__(self):
-        if self.wickets_remaining > 0 and self.balls_remaining >= 0 and self.runs_remaining < 0:
-            return "\n" + self.winning_team.name + " won by " + str(self.wickets_remaining) + " wickets and " + str(
-                self.balls_remaining
-            ) + " balls remaining"
-        elif self.winning_team.name == draw_message:
+        if self.winning_team.name == draw_message:
             return "\nThe match ended in a draw"
-        return "\n" + self.winning_team.name + " won by " + str(self.runs_remaining) + " runs and " + str(
+        elif self.wickets_remaining > 0 and self.balls_remaining >= 0 and self.runs_remaining <= 0:
+            return "\n" + self.winning_team.name + " won by " + str(self.wickets_remaining) + (
+                " wickets" if self.wickets_remaining > 1 else " wicket") + " and " + str(
+                self.balls_remaining
+            ) + (" balls" if self.balls_remaining > 1 else " ball") + " remaining"
+        return "\n" + self.winning_team.name + " won by " + str(self.runs_remaining) + (
+            " runs" if self.runs_remaining > 1 else " run") + " and " + str(
             self.balls_remaining
-        ) + " balls remaining"
+        ) + (" balls" if self.balls_remaining > 1 else " ball") + " remaining"

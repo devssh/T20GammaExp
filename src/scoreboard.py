@@ -59,13 +59,14 @@ class Scoreboard(Observer):
         notification_service.notify(
             NotificationEvent(self.balls_played, batter, runs, is_out,
                               self.balls_left, self.runs_to_win, self.wickets_left,
-                              self.player_statistics_service.player_statistics[batter.name])
+                              self.player_statistics_service.player_statistics[batter.name],
+                              self.batting_team)
         )
         if self.innings == 2:
             if self.runs_to_win <= 0:
                 notification_service.notify_winner(
                     WinEvent(self.batting_team, self.wickets_left, self.balls_left, self.runs_to_win))
-            elif self.runs_to_win == 1 and self.balls_left == 0:
+            elif self.runs_to_win == 1 and self.balls_left <=0:
                 notification_service.notify_winner(
                     WinEvent(Team(draw_message, []), self.wickets_left, self.balls_left, self.runs_to_win))
         if self.wickets_left == 0 or self.balls_left == 0:
